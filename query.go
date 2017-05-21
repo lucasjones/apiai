@@ -3,17 +3,25 @@ package apiai
 import (
 	"encoding/json"
 	"fmt"
-	"net/url"
+	"bytes"
 )
 
 // Query performs a simple API.ai query
 func (c *Client) Query(sessionID string, q string) (answer *QueryResponse, err error) {
 
-	q = url.QueryEscape(q)
-	url := fmt.Sprintf("%s/query?v=%s&query=%s&lang=en&sessionId=%v",
-		APIAIBaseURL, APIVersion, q, sessionID)
+	url := fmt.Sprintf("%s/query?v=%s", APIAIBaseURL, APIVersion)
 
-	data, err := c.httpCall("GET", url, httpBody(""))
+	reqObj := map[string]interface{}{
+		"lang": "en",
+		"q": q,
+		"sessionId": sessionID,
+	}
+	jsonData, err := json.Marshal(reqObj)
+	if err != nil {
+		return
+	}
+
+	data, err := c.httpCall("POST", url, bytes.NewBuffer(jsonData))
 	if err != nil {
 		return
 	}
